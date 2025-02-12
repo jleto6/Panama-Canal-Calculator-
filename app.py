@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key_here"  # Required for session to work
+app.secret_key = "dev"  # Required for session to work
 
 @app.route('/')
 def index():
@@ -11,17 +11,14 @@ def index():
 def calculate():
     # Check if 'ship_size' is in the form (user submitted the main form)
     if 'ship_size' in request.form:
-        ship_size = int(request.form['ship_size'])
+        ship_size = (request.form.get('ship_size', 0).replace(',', ''))
+        ship_size = int(ship_size) if ship_size.isdigit() else 0
         session['ship_size'] = ship_size  # Store it in session
     else:
         # If no ship_size is submitted, use the last saved value
         ship_size = session.get('ship_size', 50000)  # Default to 50,000 if missing
 
     amount_type = (request.form.get('amount', 'per_lock')) # Transit amount to be displayed
-
-    # Print the values to verify they are received correctly
-    print(f"Received ship_size: {ship_size}")
-    #print(f"Recieved transit amount: {transit_amount}")
 
     panamax_lock_data = {
         "lock_name": "Panamax",  
@@ -66,19 +63,49 @@ def lock_calculation(lock_data, ship_size, amount_type):
         # Full transit calculations (6 locks)
         results = {
             #"Ship Size": ship_size,
-            "Water Displaced Per Lock": format_number(water_displaced),
-            "Water Needed Per Lock": format_number(water_needed),
-            "Water Lost Per Lock": format_number(water_lost),
-            "Cost Per Lock": format_number(cost_per_lock),
+            "Water Displaced Per Lock": {
+                "value": format_number(water_displaced),
+                "tooltip": "Total water displaced by the ship as it enters the lock. Larger ships displace more water, reducing the additional water needed to fill the lock."
+            },
+
+            "Water Needed Per Lock": {
+                "value" : format_number(water_needed),
+                "tooltip" : "Additional water needed to raise the ship to the next level after accounting for displacement."
+            },
+
+            "Water Lost Per Lock": {
+                "value": format_number(water_lost),
+                "tooltip": "Water that drains out of the system and isn't recycled. Some locks use water-saving basins, but not all water can be recovered."
+            },
+
+            "Cost Per Lock": {
+                "value" : format_number(cost_per_lock) + " dollars",
+                "tooltip" : "Estimated cost of the water used for this lock cycle. Costs depend on water lost and the local price per gallon"
+            }
         }
     elif amount_type == 'per_transit':
         # Full transit calculations (6 locks)
         results = {
             #"Ship Size": ship_size,
-            "Water Displaced Per Transit ": format_number(water_displaced * 6),
-            "Water Needed Per Transit": format_number(water_needed * 6),
-            "Water Lost Per Transit": format_number(water_lost * 6),
-            "Cost Per Transit": format_number(cost_per_lock * 6)
+            "Water Displaced Per Transit ": {
+                "value": format_number(water_displaced * 6),
+                "tooltip": "Total water displaced by the ship during a full canal transit, passing through all 6 locks."
+            },
+
+            "Water Needed Per Transit": {
+                "value" : format_number(water_needed * 6),
+                "tooltip" : "Total additional water needed to raise the ship through all locks in a complete transit."
+            },
+
+            "Water Lost Per Transit": {
+                "value" : format_number(water_lost * 6),
+                "tooltip" : "Total amount of water that exits the system and is not recycled throughout the entire canal transit."
+            },
+
+            "Cost Per Transit": {
+                "value" : format_number(cost_per_lock * 6) + " dollars",
+                "tooltip" : "Estimated total cost of the water used for a full transit, based on the water lost and the local price per gallon."
+            }
         }
 
     return results
@@ -92,7 +119,7 @@ def format_number(n):
     elif n > 1_000_000:
         return f"{n / 1_000_000:.0f} million"
     elif n > 1_000:
-        return f"{n / 1_000:.1f} thousand"
+        return f"{n / 1_000:.1f}k"
     else:
         return str(n)
 
