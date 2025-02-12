@@ -34,18 +34,19 @@ def calculate():
         "water_lost": 55  # Percentage of water lost
     }
 
-    # Calculate locks
+    # Calculate BOTH Per Lock and Per Transit values in one request
     result = {
-        "Panamax" : lock_calculation(panamax_lock_data, ship_size, amount_type),
-        "Neopanamax" : lock_calculation(neopanamax_lock_data, ship_size, amount_type),
-
+        "Panamax": {
+            "per_lock": lock_calculation(panamax_lock_data, ship_size, 'per_lock'),
+            "per_transit": lock_calculation(panamax_lock_data, ship_size, 'per_transit')
+        },
+        "Neopanamax": {
+            "per_lock": lock_calculation(neopanamax_lock_data, ship_size, 'per_lock'),
+            "per_transit": lock_calculation(neopanamax_lock_data, ship_size, 'per_transit')
+        }
     }
 
-    # If JavaScript updates amount_type, return only the results section
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render_template('results.html', result=result)
-
-    return render_template('index.html', result=result, amount_type=amount_type)
+    return render_template('index.html', result=result, amount_type='per_lock')
 
 def lock_calculation(lock_data, ship_size, amount_type):
 
@@ -64,7 +65,7 @@ def lock_calculation(lock_data, ship_size, amount_type):
     if amount_type == 'per_lock':
         # Full transit calculations (6 locks)
         results = {
-            "Ship Size": ship_size,
+            #"Ship Size": ship_size,
             "Water Displaced Per Lock": format_number(water_displaced),
             "Water Needed Per Lock": format_number(water_needed),
             "Water Lost Per Lock": format_number(water_lost),
@@ -73,7 +74,7 @@ def lock_calculation(lock_data, ship_size, amount_type):
     elif amount_type == 'per_transit':
         # Full transit calculations (6 locks)
         results = {
-            "Ship Size": ship_size,
+            #"Ship Size": ship_size,
             "Water Displaced Per Transit ": format_number(water_displaced * 6),
             "Water Needed Per Transit": format_number(water_needed * 6),
             "Water Lost Per Transit": format_number(water_lost * 6),

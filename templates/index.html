@@ -6,16 +6,9 @@
     <title>Water Calculation</title>
 
     <script>
-        function updateAmountType(amountType) {
-            fetch('/calculate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'amount=' + amountType
-            })
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById("results-container").innerHTML = html;
-            });
+        function toggleView(viewType) {
+            document.querySelectorAll('.calc-result').forEach(el => el.style.display = 'none');  
+            document.querySelectorAll('.' + viewType).forEach(el => el.style.display = 'block');
         }
     </script>
 
@@ -26,47 +19,46 @@
 
     <form action="/calculate" method="post">
         <label for="ship_size">Ship Tonnage:</label>
-        <input type="number" name="ship_size" required>
-
+        <input type="number" name="ship_size" required value="{{ session.get('ship_size', '') }}">
         <button type="submit">Calculate</button>
     </form>
 
-    
-    
     {% if result %}
     <h2>Calculation Results</h2>
 
-    <div id="results-container">
-
-        <form action="/calculate" method="post">
-            <input type="radio" name="amount" value="per_lock"  
-                {% if amount_type == 'per_lock' %}checked{% endif %} 
-                onclick="updateAmountType('per_lock')"> Per Lock
-            </label>
-            <br>
+        <!-- Radio buttons to toggle between Per Lock and Per Transit -->
+        <form>
             <label>
-            <input type="radio" name="amount" value="per_transit"
-                {% if amount_type == 'per_transit' %}checked{% endif %} 
-                onclick="updateAmountType('per_transit')"> Per Transit
+                <input type="radio" name="amount" value="per_lock" checked onclick="toggleView('per_lock')"> Per Lock
+            </label>
+            <label>
+                <input type="radio" name="amount" value="per_transit" onclick="toggleView('per_transit')"> Per Transit
             </label>
         </form>
 
-            <h3>Panamax Lock</h3>
-            <ul>
-                {% for key, value in result.Panamax.items() %}
-                    <li><strong>{{ key }}:</strong> {{ value }}</li>
-                {% endfor %}
-            </ul>
+        <h3>Panamax Lock</h3>
+        <ul class="calc-result per_lock">
+            {% for key, value in result.Panamax.per_lock.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% endfor %}
+        </ul>
+        <ul class="calc-result per_transit" style="display:none;">
+            {% for key, value in result.Panamax.per_transit.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% endfor %}
+        </ul>
 
-            <h3>Neopanamax Lock</h3>
-            <ul>
-                {% for key, value in result.Neopanamax.items() %}
-                    <li><strong>{{ key }}:</strong> {{ value }}</li>
-                {% endfor %}
-            </ul>
-            
-        {% endif %}
-    </div>
-
+        <h3>Neopanamax Lock</h3>
+        <ul class="calc-result per_lock">
+            {% for key, value in result.Neopanamax.per_lock.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% endfor %}
+        </ul>
+        <ul class="calc-result per_transit" style="display:none;">
+            {% for key, value in result.Neopanamax.per_transit.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </body>
 </html>
