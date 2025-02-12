@@ -75,11 +75,9 @@ def lock_calculation(lock_data, ship_size):
     print("")
 
     # Annual calculations
-
     # for a {ship_size} ton ship in {lock_type} locks:
-
-    annual_savings = (water_displaced * 6) * transits_per_year 
-    print(f"{format_number(annual_savings)} gallons of water saved per year based on a {ship_size} ton ship")
+    #annual_savings = (water_displaced * 6) * transits_per_year 
+    #print(f"{format_number(annual_savings)} gallons of water saved per year based on a {ship_size} ton ship")
 
 
 

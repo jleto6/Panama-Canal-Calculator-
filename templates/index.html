@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Calculation</title>
+
+    <script>
+        function updateAmountType(amountType) {
+            fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'amount=' + amountType
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("results-container").innerHTML = html;
+            });
+        }
+    </script>
+
+</head>
+<body>
+    <h1>Panama Canal Water Calculator</h1>
+    <p>Enter ship details below to calculate water usage.</p>
+
+    <form action="/calculate" method="post">
+        <label for="ship_size">Ship Tonnage:</label>
+        <input type="number" name="ship_size" required>
+
+        <button type="submit">Calculate</button>
+    </form>
+
+    
+    
+    {% if result %}
+    <h2>Calculation Results</h2>
+
+    <div id="results-container">
+
+        <form action="/calculate" method="post">
+            <input type="radio" name="amount" value="per_lock"  
+                {% if amount_type == 'per_lock' %}checked{% endif %} 
+                onclick="updateAmountType('per_lock')"> Per Lock
+            </label>
+            <br>
+            <label>
+            <input type="radio" name="amount" value="per_transit"
+                {% if amount_type == 'per_transit' %}checked{% endif %} 
+                onclick="updateAmountType('per_transit')"> Per Transit
+            </label>
+        </form>
+
+            <h3>Panamax Lock</h3>
+            <ul>
+                {% for key, value in result.Panamax.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+
+            <h3>Neopanamax Lock</h3>
+            <ul>
+                {% for key, value in result.Neopanamax.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+            
+        {% endif %}
+    </div>
+
+</body>
+</html>
